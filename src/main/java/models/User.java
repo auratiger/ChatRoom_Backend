@@ -2,11 +2,21 @@ package models;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
+import javax.xml.bind.annotation.XmlRootElement;
 import java.time.LocalDateTime;
 import java.util.Objects;
 
 @Entity
 @Table(name = "Users")
+@NamedQueries({
+        @NamedQuery(name = "findUserByEmailAndPassword",
+                query = "select u from User u where u.email = :email and u.password = :password"),
+        @NamedQuery(name = "findUserByUsername",
+                query = "select u from User u where u.username = :username"),
+        @NamedQuery(name = "findUserByEmail",
+                query = "select u from User u where u.email = :email")
+})
+@XmlRootElement
 public abstract class User {
 
     @Id

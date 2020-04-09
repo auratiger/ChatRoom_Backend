@@ -13,6 +13,9 @@ public class Room {
 
     private String name;
 
+    @OneToMany
+    private List<User> users;
+
     private LocalDateTime created;
 
     public Room(){

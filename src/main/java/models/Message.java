@@ -113,7 +113,7 @@ public class Message {
         if (content.length() > 30) {
             displayContent = content.substring(0, 29);
         }
-        return "Comment{" +
+        return "Message{" +
                 "content='" + displayContent + '\'' +
                 ", author=" + user.getUsername() +
                 ", room=" + room.getName() +

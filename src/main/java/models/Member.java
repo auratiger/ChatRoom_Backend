@@ -1,6 +1,8 @@
 package models;
 
 import javax.persistence.Entity;
+import javax.persistence.NamedQueries;
+import javax.persistence.NamedQuery;
 import java.time.LocalDateTime;
 
 @Entity
