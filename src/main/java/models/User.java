@@ -1,5 +1,8 @@
 package models;
 
+import javax.json.Json;
+import javax.json.JsonObject;
+import javax.json.JsonObjectBuilder;
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -123,6 +126,31 @@ public abstract class User {
 
     public void setUserIcon(String userIcon) {
         this.userIcon = userIcon;
+    }
+
+    public JsonObject toJson(){
+        JsonObjectBuilder builder = Json.createObjectBuilder();
+
+        if(id != null){
+            builder.add("id", id);
+        }
+        builder.add("username", username).
+                add("userIcon", userIcon).
+                add("email", email);
+
+        return builder.build();
+    }
+
+    public static <T extends User> T fromJson(JsonObject newUser, T instance){
+        instance.setUsername(newUser.getString("username"));
+        instance.setPassword(newUser.getString("password"));
+        instance.setFirstName(newUser.getString("firstName"));
+        instance.setLastName(newUser.getString("lastName"));
+        instance.setEmail(newUser.getString("email"));
+        // this should be changed to add a blob of the picture which is stored
+        // on the server the the specified path {userIcon}
+        instance.setUserIcon(newUser.getString("userIcon"));
+        return instance;
     }
 
     @Override
