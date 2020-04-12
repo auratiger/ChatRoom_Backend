@@ -8,6 +8,7 @@ import io.jsonwebtoken.security.Keys;
 import models.Member;
 import models.User;
 import org.apache.log4j.Logger;
+import user.member.MemberDAO;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -39,23 +40,37 @@ public class LoginResource{
     @Inject
     private MemberDAO memberDAO;
 
+    @OPTIONS
+    @Path("{path : .*}")
+    public Response options() {
+        return Response.ok("")
+                .header("Access-Control-Allow-Origin", "*")
+                .header("Access-Control-Allow-Headers", "origin, content-type, accept, authorization")
+                .header("Access-Control-Allow-Credentials", "true")
+                .header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, HEAD")
+                .header("Access-Control-Max-Age", "1209600")
+                .build();
+    }
+
     @POST
-    @Path("login")
+    @Path("/login")
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    @Produces(MediaType.APPLICATION_JSON)
     public Response login(@FormParam("email") String email,
                           @FormParam("password") String password){
 
         Optional<User> userOptional = userDAO.login(email, password);
         String token = issueToken("one", "Smith", "John");
-        emailClient.sendMessage("auratiger00@gmail.com");
 
         return userOptional.map(u ->
-                Response.ok().entity(token).build()).
+                Response.ok()
+                        .header("jwtToken", token)
+                        .entity(u.toJson()).build()).
                 orElse(Response.status(Response.Status.UNAUTHORIZED).build());
     }
 
     @POST
-    @Path("signup")
+    @Path("/signup")
     @Consumes(MediaType.APPLICATION_JSON)
     public Response createUser(String newUserJson){
 
@@ -64,7 +79,7 @@ public class LoginResource{
             URI location = URI.create(Application.APPLICATION_PATH + RESOURCE_PATH + "/" + persisted.getId());
             String token = issueToken(persisted.getId().toString(), location.toString(), "empty jwt");
             emailClient.sendMessage(persisted.getEmail());
-            return Response.created(location).entity(token).build();
+            return Response.created(location).header("jwtToken", token).entity(persisted.toJson()).build();
         }catch (Exception ex){
             logger.error("User already exists");
             return Response.status(Response.Status.CONFLICT).entity("User already exists").build();

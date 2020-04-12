@@ -5,6 +5,7 @@ import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
 import java.time.LocalDateTime;
 import java.util.Objects;
@@ -29,12 +30,18 @@ public abstract class User {
     @Version
     private int version;
 
+    @Size(min = 1, max = 15)
     private String username;
+    @Size(min = 1, max = 30)
     private String password;
 
+    @Size(min = 1, max = 15)
     private String firstName;
+
+    @Size(min = 1, max = 15)
     private String lastName;
 
+    @Size(min = 1)
     private String email;
 
     @NotNull

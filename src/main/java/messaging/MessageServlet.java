@@ -25,19 +25,20 @@ public class MessageServlet {
 
     @OnOpen
     public void openConnection(Session session){
-        System.out.println("New Connection");
+        logger.info("User has connected: " + session);
         sessions.add(session);
     }
 
     @OnClose
     public void closeConnection(Session session){
+        logger.info("User has disconnected: " + session);
         sessions.remove(session);
     }
 
     @OnMessage
     public void message(String message) throws IOException {
         System.out.println(message);
-        logger.info("this is and info log");
+        logger.info("Message: " + message);
 
 //        String userName = message.substring(0, message.indexOf(":"));
 //        String messageContent = message.substring(message.indexOf(":") + 1);

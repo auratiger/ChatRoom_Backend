@@ -1,6 +1,6 @@
-package user.login;
+package user.administrator;
 
-import models.Member;
+import models.Administrator;
 
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
@@ -9,15 +9,15 @@ import javax.persistence.PersistenceContext;
 import javax.transaction.Transactional;
 
 @RequestScoped
-public class MemberDAO {
+public class AdministratorDAO {
 
     @PersistenceContext
     private EntityManager entityManager;
 
     @Transactional
-    public Member addMember(Member member){
-        entityManager.persist(member);
-        return member;
+    public Administrator addAdministrator(Administrator newAdministrator){
+        entityManager.persist(newAdministrator);
+        return newAdministrator;
     }
 
 }
