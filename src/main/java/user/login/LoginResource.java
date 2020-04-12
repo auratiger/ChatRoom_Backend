@@ -40,18 +40,6 @@ public class LoginResource{
     @Inject
     private MemberDAO memberDAO;
 
-    @OPTIONS
-    @Path("{path : .*}")
-    public Response options() {
-        return Response.ok("")
-                .header("Access-Control-Allow-Origin", "*")
-                .header("Access-Control-Allow-Headers", "origin, content-type, accept, authorization")
-                .header("Access-Control-Allow-Credentials", "true")
-                .header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, HEAD")
-                .header("Access-Control-Max-Age", "1209600")
-                .build();
-    }
-
     @POST
     @Path("/login")
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
@@ -60,12 +48,14 @@ public class LoginResource{
                           @FormParam("password") String password){
 
         Optional<User> userOptional = userDAO.login(email, password);
-        String token = issueToken("one", "Smith", "John");
 
         return userOptional.map(u ->
                 Response.ok()
-                        .header("jwtToken", token)
-                        .entity(u.toJson()).build()).
+                        .header("jwtToken", issueToken(u.getId().toString(),
+                                Application.APPLICATION_PATH + RESOURCE_PATH + "/" + u.getId(),
+                                "subject"))
+                        .entity(u.toJson())
+                        .build()).
                 orElse(Response.status(Response.Status.UNAUTHORIZED).build());
     }
 
@@ -73,15 +63,16 @@ public class LoginResource{
     @Path("/signup")
     @Consumes(MediaType.APPLICATION_JSON)
     public Response createUser(String newUserJson){
-
+        logger.info(newUserJson);
         try {
             Member persisted = memberDAO.addMember(Member.fromJson(newUserJson));
+            logger.info("created new User: " + persisted);
             URI location = URI.create(Application.APPLICATION_PATH + RESOURCE_PATH + "/" + persisted.getId());
             String token = issueToken(persisted.getId().toString(), location.toString(), "empty jwt");
             emailClient.sendMessage(persisted.getEmail());
             return Response.created(location).header("jwtToken", token).entity(persisted.toJson()).build();
         }catch (Exception ex){
-            logger.error("User already exists");
+            logger.error("User already exists " + ex.toString());
             return Response.status(Response.Status.CONFLICT).entity("User already exists").build();
         }
     }

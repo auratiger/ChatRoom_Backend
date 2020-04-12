@@ -44,6 +44,8 @@ public abstract class User {
     @Size(min = 1)
     private String email;
 
+    private boolean emailVerified = false;
+
     @NotNull
     private LocalDateTime created;
 
@@ -131,6 +133,14 @@ public abstract class User {
         return userIcon;
     }
 
+    public boolean isEmailVerified() {
+        return emailVerified;
+    }
+
+    public void setEmailVerified(boolean emailVerified) {
+        this.emailVerified = emailVerified;
+    }
+
     public void setUserIcon(String userIcon) {
         this.userIcon = userIcon;
     }
@@ -142,7 +152,7 @@ public abstract class User {
             builder.add("id", id);
         }
         builder.add("username", username).
-                add("userIcon", userIcon).
+//                add("userIcon", userIcon).
                 add("email", email);
 
         return builder.build();
@@ -154,9 +164,10 @@ public abstract class User {
         instance.setFirstName(newUser.getString("firstName"));
         instance.setLastName(newUser.getString("lastName"));
         instance.setEmail(newUser.getString("email"));
+        instance.setCreated(LocalDateTime.now());
         // this should be changed to add a blob of the picture which is stored
         // on the server the the specified path {userIcon}
-        instance.setUserIcon(newUser.getString("userIcon"));
+//        instance.setUserIcon(newUser.getString("userIcon"));
         return instance;
     }
 

@@ -36,7 +36,7 @@ public class DataLoader {
         Room room = roomDAO.addRoom(new Room("first", LocalDateTime.now()));
 
         Member member = memberDAO.addMember(new Member("john", "smith", "John",
-                "Smith", "auratiger00@gmail.com", LocalDateTime.now(), ""));
+                "Smith", "auratigera00@gmail.com", LocalDateTime.now(), ""));
         System.out.println("hello");
 
         Message message = messageDAO.addMessage(new Message("new message", member, room, LocalDateTime.now()));

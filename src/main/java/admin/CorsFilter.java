@@ -14,7 +14,6 @@ public class CorsFilter implements ContainerResponseFilter, ContainerRequestFilt
     @Path("{path : .*}")
     public void filter(ContainerRequestContext request,
                        ContainerResponseContext response) throws IOException {
-        System.out.println("working ----------------");
 
 //        containerResponseContext.getHeaders().add("Access-Control-Allow-Origin", "http://localhost:3000/");
 //        containerResponseContext.getHeaders().add("Access-Control-Allow-Headers", "Content-Type");
@@ -51,14 +50,11 @@ public class CorsFilter implements ContainerResponseFilter, ContainerRequestFilt
 
     @Override
     public void filter(ContainerRequestContext request) throws IOException {
-        System.out.println("working ----------------");
-
         // If it's a preflight request, we abort the request with
         // a 200 status, and the CORS headers are added in the
         // response filter method below.
         if (isPreflightRequest(request)) {
             request.abortWith(Response.ok().build());
-            return;
         }
     }
 
