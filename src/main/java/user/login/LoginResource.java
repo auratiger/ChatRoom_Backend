@@ -1,24 +1,33 @@
 package user.login;
 
+import Filters.JwtTokenNeeded;
 import admin.Application;
 import admin.EmailClient;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import models.Member;
 import models.User;
 import org.apache.log4j.Logger;
 import user.member.MemberDAO;
 
+import javax.crypto.SecretKey;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.net.URI;
 import java.security.Key;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.Optional;
+import java.util.Properties;
 
 @Path(LoginResource.RESOURCE_PATH)
 @Produces(MediaType.APPLICATION_JSON)
@@ -30,6 +39,21 @@ public class LoginResource{
     private static final Logger logger = Logger.getLogger(LoginResource.class);
 
     private static final long serialVersionUID = 5070928362318899898L;
+
+    private final String privateKey;
+
+    {
+        Properties props = new Properties();
+        try {
+            props.load(new FileInputStream(
+                    "C:\\Users\\jboxers\\IdeaProjects\\ChatRoom_Backend\\src\\main\\resources\\application.properties"
+            ));
+        }catch (IOException e){
+            e.printStackTrace();
+        }
+
+        privateKey = props.getProperty("jwt.key");
+    }
 
     @Inject
     private EmailClient emailClient;
@@ -51,10 +75,7 @@ public class LoginResource{
 
         return userOptional.map(u ->
                 Response.ok()
-                        .header("jwtToken", issueToken(u.getId().toString(),
-                                Application.APPLICATION_PATH + RESOURCE_PATH + "/" + u.getId(),
-                                "subject"))
-                        .entity(u.toJson())
+                        .entity(issueToken(u.getId().toString(), u.toJson().toString()))
                         .build()).
                 orElse(Response.status(Response.Status.UNAUTHORIZED).build());
     }
@@ -68,24 +89,22 @@ public class LoginResource{
             Member persisted = memberDAO.addMember(Member.fromJson(newUserJson));
             logger.info("created new User: " + persisted);
             URI location = URI.create(Application.APPLICATION_PATH + RESOURCE_PATH + "/" + persisted.getId());
-            String token = issueToken(persisted.getId().toString(), location.toString(), "empty jwt");
+            String token = issueToken(persisted.getId().toString(), persisted.toJson().toString());
             emailClient.sendMessage(persisted.getEmail());
-            return Response.created(location).header("jwtToken", token).entity(persisted.toJson()).build();
+            return Response.created(location).entity(token).build();
         }catch (Exception ex){
             logger.error("User already exists " + ex.toString());
             return Response.status(Response.Status.CONFLICT).entity("User already exists").build();
         }
     }
 
-    private String issueToken(String id, String issuer, String subject){
+    private String issueToken(String id, String payload){
 
-        Key key = Keys.secretKeyFor(SignatureAlgorithm.HS256);
+        SecretKey key = Keys.hmacShaKeyFor(Decoders.BASE64.decode(privateKey));
 
         return Jwts.builder().
                 setId(id).
-                setIssuer(issuer).
-                setSubject(subject).
-                setIssuedAt(new Date()).
+                setSubject(payload).
                 signWith(key).
                 compact();
     }
