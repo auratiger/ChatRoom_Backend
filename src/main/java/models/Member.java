@@ -29,6 +29,7 @@ public class Member extends User {
     @Override
     public String toString() {
         return "Member{" +
+                "id='" + getId() + '\'' +
                 "userName='" + getUsername() + '\'' +
                 ", firstName='" + getFirstName() + '\'' +
                 ", lastName='" + getLastName() + '\'' +

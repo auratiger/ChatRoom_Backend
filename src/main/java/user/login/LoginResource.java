@@ -19,13 +19,8 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URI;
-import java.security.Key;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.Date;
 import java.util.Optional;
 import java.util.Properties;
 
@@ -90,7 +85,7 @@ public class LoginResource{
             logger.info("created new User: " + persisted);
             URI location = URI.create(Application.APPLICATION_PATH + RESOURCE_PATH + "/" + persisted.getId());
             String token = issueToken(persisted.getId().toString(), persisted.toJson().toString());
-            emailClient.sendMessage(persisted.getEmail());
+            emailClient.sendMessage(persisted.getEmail(), persisted.getId());
             return Response.created(location).entity(token).build();
         }catch (Exception ex){
             logger.error("User already exists " + ex.toString());

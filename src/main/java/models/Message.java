@@ -1,12 +1,24 @@
 package models;
 
+import javax.json.Json;
+import javax.json.JsonObject;
+import javax.json.JsonObjectBuilder;
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Objects;
 
 @Entity
+@NamedQueries({
+    @NamedQuery(name = "findMessageByUserAndRoom",
+        query = "select m from Message m where m.user.id = :userid and m.room.id = :roomid"),
+    @NamedQuery(name = "findMessageByUser",
+        query = "select m from Message m where m.user.id = :userid"),
+    @NamedQuery(name="findMessageByRoom",
+        query = "select m from Message m where m.room.id = :roomid")
+})
 public class Message {
 
     @Id
@@ -87,6 +99,29 @@ public class Message {
 
     public void setCreated(LocalDateTime created) {
         this.created = created;
+    }
+
+    public JsonObject toJson(){
+        JsonObjectBuilder builder = Json.createObjectBuilder();
+
+        if(id != null){
+            builder.add("id", id);
+        }
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+
+        builder.add("text", content);
+        builder.add("user", user.getUsername());
+        builder.add("created", formatter.format(created));
+
+        return builder.build();
+    }
+
+    public static Message fromJson(String jsonMessage){
+
+
+
+        return null;
     }
 
     @Override

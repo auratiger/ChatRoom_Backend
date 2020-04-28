@@ -2,6 +2,7 @@ package user.login;
 
 import models.User;
 
+import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.context.RequestScoped;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
@@ -9,7 +10,7 @@ import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 import java.util.Optional;
 
-@RequestScoped
+@ApplicationScoped
 public class UserDAO {
 
     @PersistenceContext
@@ -39,6 +40,26 @@ public class UserDAO {
         }
     }
 
+    public User verifyEmail(Long id){
+
+        entityManager.getTransaction().begin();
+
+        User user = entityManager.find(User.class, id);
+
+        if(user == null){
+            throw new IllegalArgumentException("Cannot verify non-existing user");
+        }
+
+        user.setEmailVerified(true);
+
+        System.out.println(entityManager.find(User.class, id));
+
+        entityManager.getTransaction().commit();
+        entityManager.close();
+
+        return user;
+    }
+
     public boolean emailExists(String email){
         TypedQuery<User> query = entityManager.createNamedQuery("findUserByEmail", User.class);
         query.setParameter("email", email);
@@ -49,5 +70,9 @@ public class UserDAO {
         }catch (NoResultException ex){
             return false;
         }
+    }
+
+    public Optional<User> findUserById(Long id){
+        return Optional.ofNullable(entityManager.find(User.class, id));
     }
 }

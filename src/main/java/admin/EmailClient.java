@@ -47,7 +47,7 @@ public class EmailClient {
         password = cred.getProperty("email.password");
     }
 
-    private Message createMessage(String to){
+    private Message createMessage(String to, Long id){
         session = Session.getInstance(props, new javax.mail.Authenticator() {
             protected PasswordAuthentication getPasswordAuthentication() {
                 return new PasswordAuthentication(from, password);
@@ -66,7 +66,7 @@ public class EmailClient {
             message.setContent(
                     "<div style='height:100%; border:1px solid black; text-align:center;'>" +
                             "<h1>This is actual message embedded in HTML tags</h1>" +
-                            "<a href='https://www.google.com/' target='_blank'>" +
+                            "<a href='http://localhost:3000/email_verification/verify/" + to + id + " target='_blank'>" +
                             "<h2>click here to verify your email</h2>" +
                             "</a>" +
                             "</div>",
@@ -79,9 +79,9 @@ public class EmailClient {
         return message;
     }
 
-    public void sendMessage(String to){
+    public void sendMessage(String to, Long id){
         try {
-            Message message = createMessage(to);
+            Message message = createMessage(to, id);
             Transport.send(message);
             System.out.println("sent");
         } catch (MessagingException e) {

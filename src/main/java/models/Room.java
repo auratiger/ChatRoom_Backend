@@ -50,4 +50,9 @@ public class Room {
     public void setCreated(LocalDateTime created) {
         this.created = created;
     }
+
+    @Override
+    public String toString() {
+        return "Room: { name = " + name + " }";
+    }
 }

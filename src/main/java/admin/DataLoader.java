@@ -13,6 +13,7 @@ import javax.ejb.Singleton;
 import javax.ejb.Startup;
 import javax.inject.Inject;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Singleton
 @Startup
@@ -33,18 +34,28 @@ public class DataLoader {
     @PostConstruct
     public void load(){
 
-        Room room = roomDAO.addRoom(new Room("first", LocalDateTime.now()));
+        Room room = roomDAO.addRoom(new Room("General", LocalDateTime.now()));
 
-        Member member = memberDAO.addMember(new Member("john", "smith", "John",
+        Member john = memberDAO.addMember(new Member("john", "smith", "John",
                 "Smith", "auratigera00@gmail.com", LocalDateTime.now(), ""));
-        System.out.println("hello");
 
-        Message message = messageDAO.addMessage(new Message("new message", member, room, LocalDateTime.now()));
+        Member adam = memberDAO.addMember(new Member("adam", "pass", "Adam",
+                "Petals", "adam00@gmail.com", LocalDateTime.now(), ""));
+
+        Message message = messageDAO.addMessage(new Message("Hello", john, room, LocalDateTime.now()));
+        messageDAO.addMessage(new Message("Wasup", adam, room, LocalDateTime.now()));
+        messageDAO.addMessage(new Message("nothing much, you", john, room, LocalDateTime.now()));
 
         System.out.println("-------------------------------------");
         System.out.println(userDAO.userNameExists("john"));
         System.out.println(userDAO.userNameExists("franck"));
         System.out.println(message);
+        System.out.println(room.getId());
+
+        List<Message> messages = messageDAO.findMessagesByUserAndRoom(john.getId(), room.getId());
+        for(Message m: messages){
+            System.out.println(m);
+        }
 
 
     }
