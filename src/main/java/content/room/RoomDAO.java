@@ -4,9 +4,10 @@ import models.Room;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.context.RequestScoped;
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
+import javax.persistence.*;
 import javax.transaction.Transactional;
+import java.lang.reflect.Type;
+import java.util.List;
 import java.util.Optional;
 
 @ApplicationScoped
@@ -23,5 +24,12 @@ public class RoomDAO {
 
     public Optional<Room> findRoomById(Long id) {
         return Optional.ofNullable(entityManager.find(Room.class, id));
+    }
+
+    public List<Room> findRoomByUser(Long userId) {
+        TypedQuery<Room> query = entityManager.createNamedQuery("findRoomsByUserId", Room.class);
+        query.setParameter("user_id", userId);
+
+        return query.getResultList();
     }
 }

@@ -1,5 +1,6 @@
 package messaging;
 
+import Exceptions.NoSuchUserExistsException;
 import content.message.MessageDAO;
 import content.room.RoomDAO;
 import models.Member;
@@ -17,6 +18,7 @@ import javax.json.JsonReader;
 import javax.websocket.*;
 import javax.websocket.server.PathParam;
 import javax.websocket.server.ServerEndpoint;
+import java.io.EOFException;
 import java.io.IOException;
 import java.io.StringReader;
 import java.time.LocalDateTime;
@@ -48,7 +50,14 @@ public class MessageServlet {
         logger.info("User has connected: " + session);
         sessions.add(session);
         userDAO.findUserById(id).ifPresent(user -> activeUsers.put(id, user));
-        // TODO should give exception if no user by the given id is found
+
+        Optional<User> user = userDAO.findUserById(id);
+        if(user.isPresent()){
+            activeUsers.put(id, user.get());
+        }else {
+            throw new NoSuchUserExistsException("User with the specified id does not exist");
+        }
+
         logger.debug("active user added");
     }
 
@@ -85,9 +94,24 @@ public class MessageServlet {
         }
     }
 
-//    @OnError
-//    public void onError(Session session, Throwable t){
-//        logger.error(t.getMessage());
-//    }
+    @OnError
+    public void onError(Session session, Throwable t) throws Throwable{
+        int count = 0;
+        Throwable root = t;
+        while (root.getCause() != null && count < 20) {
+            root = root.getCause();
+            count ++;
+        }
+        if (root instanceof EOFException) {
+            // Assume this is triggered by the user closing their browser and
+            // ignore it.
+        } else if( root instanceof NoSuchUserExistsException) {
+            // should send an error to the client before closing the connection so it stops trying to reconnect
+            session.close(new CloseReason(CloseReason.CloseCodes.CANNOT_ACCEPT, "No such user exists!"));
+            throw t;
+        } else {
+            throw t;
+        }
+    }
 
 }

@@ -2,7 +2,7 @@
              xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/persistence
                                  http://xmlns.jcp.org/xml/ns/persistence/persistence_2_1.xsd"
              version="2.1">
-    <persistence-unit name="magazine-manager">
+    <persistence-unit name="charRoom-manager">
         <properties>
             <!-- JDBC properties -->
             <property name="javax.persistence.schema-generation.database.action" value="create"/>

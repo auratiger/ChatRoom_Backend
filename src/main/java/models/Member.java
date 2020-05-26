@@ -14,6 +14,10 @@ public class Member extends User {
 
     }
 
+    public Member(String username, String password, String firstName, String lastName, String email, LocalDateTime created) {
+        super(username, password, firstName, lastName, email, created);
+    }
+
     public Member(String username, String password, String firstName, String lastName, String email, LocalDateTime created, String userIcon) {
         super(username, password, firstName, lastName, email, created, userIcon);
     }

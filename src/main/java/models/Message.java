@@ -40,17 +40,17 @@ public class Message {
     private Room room;
 
     @NotNull
-    private LocalDateTime created;
+    private LocalDateTime timestamp;
 
     public Message(){
 
     }
 
-    public Message(@Size(min = 1) String content, @NotNull User user, @NotNull Room room, @NotNull LocalDateTime created) {
+    public Message(@Size(min = 1) String content, @NotNull User user, @NotNull Room room, @NotNull LocalDateTime timestamp) {
         this.content = content;
         this.user = user;
         this.room = room;
-        this.created = created;
+        this.timestamp = timestamp;
     }
 
     public Long getId() {
@@ -93,12 +93,12 @@ public class Message {
         this.room = room;
     }
 
-    public LocalDateTime getCreated() {
-        return created;
+    public LocalDateTime getTimestamp() {
+        return timestamp;
     }
 
-    public void setCreated(LocalDateTime created) {
-        this.created = created;
+    public void setTimestamp(LocalDateTime timestamp) {
+        this.timestamp = timestamp;
     }
 
     public JsonObject toJson(){
@@ -111,8 +111,8 @@ public class Message {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
         builder.add("text", content);
-        builder.add("user", user.getUsername());
-        builder.add("created", formatter.format(created));
+        builder.add("author", user.getUsername());
+        builder.add("timestamp", formatter.format(timestamp));
 
         return builder.build();
     }
@@ -134,12 +134,12 @@ public class Message {
         return Objects.equals(content, message.content) &&
                 Objects.equals(user, message.user) &&
                 Objects.equals(room, message.room) &&
-                Objects.equals(created, message.created);
+                Objects.equals(timestamp, message.timestamp);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(content, user, room, created);
+        return Objects.hash(content, user, room, timestamp);
     }
 
     @Override
@@ -152,7 +152,7 @@ public class Message {
                 "content='" + displayContent + '\'' +
                 ", author=" + user.getUsername() +
                 ", room=" + room.getName() +
-                ", created=" + created +
+                ", timestamp=" + timestamp +
                 '}';
     }
 }

@@ -1,14 +1,20 @@
 package models;
 
 import javax.json.Json;
+import javax.json.JsonArrayBuilder;
 import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.time.LocalDateTime;
-import java.util.Objects;
+import java.util.*;
 
 @Entity
 @Table(name = "Users")
@@ -35,6 +41,9 @@ public abstract class User {
     @Size(min = 1, max = 30)
     private String password;
 
+//    @Size(min = 1, max = 30)
+//    private String nickname;
+
     @Size(min = 1, max = 15)
     private String firstName;
 
@@ -47,21 +56,36 @@ public abstract class User {
     private boolean emailVerified = false;
 
     @NotNull
-    private LocalDateTime created;
+    private LocalDateTime timestamp;
 
-    private String userIcon; // saves the file path to the icon of the user
+    @NotNull
+    @OneToMany
+    private List<User> friends = new ArrayList<>();
 
-    public User(){
+    @ManyToMany(mappedBy = "users")
+    private Set<Room> rooms = new HashSet<>();
 
+    private String userIcon = "C:\\Users\\jboxers\\IdeaProjects\\ChatRoom_Backend\\src\\main\\resources\\userImages\\user_image.jpg"; // saves the file path to the icon of the user
+
+    public User() {
     }
 
-    public User(String username, String password, String firstName, String lastName, String email, LocalDateTime created, String userIcon) {
+    public User(String username, String password, String firstName, String lastName, String email, LocalDateTime timestamp){
         this.username = username;
         this.password = password;
         this.firstName = firstName;
         this.lastName = lastName;
         this.email = email;
-        this.created = created;
+        this.timestamp = timestamp;
+    }
+
+    public User(String username, String password, String firstName, String lastName, String email, LocalDateTime timestamp, String userIcon){
+        this.username = username;
+        this.password = password;
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.email = email;
+        this.timestamp = timestamp;
         this.userIcon = userIcon;
     }
 
@@ -121,16 +145,28 @@ public abstract class User {
         this.email = email;
     }
 
-    public LocalDateTime getCreated() {
-        return created;
+    public LocalDateTime getTimestamp() {
+        return timestamp;
     }
 
-    public void setCreated(LocalDateTime created) {
-        this.created = created;
+    public void setTimestamp(LocalDateTime timestamp) {
+        this.timestamp = timestamp;
     }
 
     public String getUserIcon() {
         return userIcon;
+    }
+
+    public void setUserIcon(String userIcon) {
+        this.userIcon = userIcon;
+    }
+
+    public Set<Room> getRooms() {
+        return rooms;
+    }
+
+    public void setRooms(Set<Room> rooms) {
+        this.rooms = rooms;
     }
 
     public boolean isEmailVerified() {
@@ -141,21 +177,47 @@ public abstract class User {
         this.emailVerified = emailVerified;
     }
 
-    public void setUserIcon(String userIcon) {
-        this.userIcon = userIcon;
+    public List<User> getFriends() {
+        return friends;
+    }
+
+    public void setFriends(List<User> friends) {
+        this.friends = friends;
+    }
+
+    public void addFriend(User user){
+        this.friends.add(user);
     }
 
     public JsonObject toJson(){
         JsonObjectBuilder builder = Json.createObjectBuilder();
+        JsonArrayBuilder arrayBuilder = Json.createArrayBuilder();
 
         if(id != null){
             builder.add("id", id);
         }
+
         builder.add("username", username).
-//                add("userIcon", userIcon).
+                add("userIcon", encodeImage(userIcon)).
                 add("email", email);
 
         return builder.build();
+    }
+
+    private String encodeImage(String imagePath) {
+        String base64Image = "";
+        File file = new File(imagePath);
+        try (FileInputStream imageInFile = new FileInputStream(file)) {
+            // Reading a Image file from file system
+            byte imageData[] = new byte[(int) file.length()];
+            imageInFile.read(imageData);
+            base64Image = Base64.getEncoder().encodeToString(imageData);
+        } catch (FileNotFoundException e) {
+            System.out.println("Image not found" + e);
+        } catch (IOException ioe) {
+            System.out.println("Exception while reading the Image " + ioe);
+        }
+        return base64Image;
     }
 
     public static <T extends User> T fromJson(JsonObject newUser, T instance){
@@ -164,7 +226,7 @@ public abstract class User {
         instance.setFirstName(newUser.getString("firstName"));
         instance.setLastName(newUser.getString("lastName"));
         instance.setEmail(newUser.getString("email"));
-        instance.setCreated(LocalDateTime.now());
+        instance.setTimestamp(LocalDateTime.now());
         // this should be changed to add a blob of the picture which is stored
         // on the server the the specified path {userIcon}
 //        instance.setUserIcon(newUser.getString("userIcon"));
