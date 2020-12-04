@@ -60,7 +60,7 @@ public abstract class User {
 
     @NotNull
     @OneToMany
-    private List<User> friends = new ArrayList<>();
+    private Set<User> friends = new HashSet<>();
 
     @ManyToMany(mappedBy = "users")
     private Set<Room> rooms = new HashSet<>();
@@ -177,11 +177,11 @@ public abstract class User {
         this.emailVerified = emailVerified;
     }
 
-    public List<User> getFriends() {
+    public Set<User> getFriends() {
         return friends;
     }
 
-    public void setFriends(List<User> friends) {
+    public void setFriends(Set<User> friends) {
         this.friends = friends;
     }
 
@@ -191,7 +191,6 @@ public abstract class User {
 
     public JsonObject toJson(){
         JsonObjectBuilder builder = Json.createObjectBuilder();
-        JsonArrayBuilder arrayBuilder = Json.createArrayBuilder();
 
         if(id != null){
             builder.add("id", id);

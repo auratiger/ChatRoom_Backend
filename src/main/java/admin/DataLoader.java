@@ -34,7 +34,7 @@ public class DataLoader {
     @PostConstruct
     public void load(){
 
-        Room room = roomDAO.addRoom(new Room("General", LocalDateTime.now()));
+        Room room = roomDAO.addRoom(new Room("General"));
 
         Member john = memberDAO.addMember(new Member("john", "smith", "John",
                 "Smith", "auratigera00@gmail.com", LocalDateTime.now()));
@@ -42,9 +42,9 @@ public class DataLoader {
         Member adam = memberDAO.addMember(new Member("adam", "pass", "Adam",
                 "Petals", "adam00@gmail.com", LocalDateTime.now()));
 
-        Message message = messageDAO.addMessage(new Message("Hello", john, room, LocalDateTime.now()));
-        messageDAO.addMessage(new Message("Wasup", adam, room, LocalDateTime.now()));
-        messageDAO.addMessage(new Message("nothing much, you", john, room, LocalDateTime.now()));
+        Message message = messageDAO.addMessage(new Message("Hello", john, room));
+        messageDAO.addMessage(new Message("Wasup", adam, room));
+        messageDAO.addMessage(new Message("nothing much, you", john, room));
 
         System.out.println(userDAO.userNameExists("john"));
         System.out.println(userDAO.userNameExists("franck"));
@@ -56,11 +56,18 @@ public class DataLoader {
             System.out.println(m);
         }
 
-        roomDAO.addRoom(new Room("new 1", LocalDateTime.now())).addUser(john);
-        roomDAO.addRoom(new Room("new 2", LocalDateTime.now())).addUser(john);
-        roomDAO.addRoom(new Room("new 3", LocalDateTime.now())).addUser(john);
-        List<Room> rooms = roomDAO.findRoomByUser(john.getId());
-        System.out.println("============================================");
+        roomDAO.addRoom(new Room("new 1")).addUser(john);
+        Room shared1 = roomDAO.addRoom(new Room("new 2"));
+        Room shared2 = roomDAO.addRoom(new Room("new 3"));
+        shared1.addUser(john);
+        shared1.addUser(adam);
+        shared2.addUser(john);
+        shared2.addUser(adam);
+
+        room.addUser(john);
+        room.addUser(adam);
+
+        List<Room> rooms = roomDAO.findOrderedRoomsByUser(john.getId());
         for(Room room1 : rooms){
             System.out.println(room1);
         }

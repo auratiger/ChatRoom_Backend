@@ -25,6 +25,7 @@ public class MessageResource {
     @Path("/messages/{userid}/{roomid}")
     public Response getMessages(@PathParam("userid") long userid, @PathParam("roomid") long roomid){
 
+        // TODO: need to tweak around with the limit of messages
         List<Message> messages = messageDAO.findMessagesByRoom(roomid);
 
         JsonObjectBuilder objectBuilder = Json.createObjectBuilder();
@@ -35,5 +36,28 @@ public class MessageResource {
         objectBuilder.add("messages", builder);
 
         return Response.ok().entity(objectBuilder.build().toString()).build();
+    }
+
+    @DELETE
+    @Path("/messages/{message_id}")
+    public Response deleteMessage(@PathParam("message_id") long message_id){
+        int deleted = messageDAO.deleteMessageById(message_id);
+        return deleted == 1 ? Response.ok().entity(deleted).build() :
+                Response.status(400).entity(deleted).build();
+    }
+
+    @PUT
+    @Path("messages/{message_id}/{newContent}")
+    public Response updateMessage(@PathParam("message_id") long message_id,
+                                  @PathParam("newContent") String newContent){
+
+        if(newContent == null){
+            newContent = "";
+        }
+
+        Message message = messageDAO.findMessageById(message_id);
+        message.setContent(newContent);
+
+        return Response.ok().build();
     }
 }

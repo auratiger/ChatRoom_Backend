@@ -1,5 +1,7 @@
 package models;
 
+import org.hibernate.annotations.CreationTimestamp;
+
 import javax.json.Json;
 import javax.json.JsonArrayBuilder;
 import javax.json.JsonObject;
@@ -16,12 +18,20 @@ import java.util.Base64;
 import java.util.HashSet;
 import java.util.Set;
 
+enum TYPES{
+    GROUP, USER
+}
+
 @Entity
 @NamedQueries({
         @NamedQuery(name="findRoomsByUserId",
-            query = "select r from Room r join r.users u where u.id = :user_id"),
+            query = "select r from Room r left join fetch r.users u where u.id = :user_id"),
         @NamedQuery(name="findAllRooms",
-            query = "select r from Room r")
+            query = "select r from Room r"),
+        @NamedQuery(name="findOrderedRoomsByUserId",
+            query = "select r from Room r left join fetch r.users u where u.id = :user_id order by r.lastUpdated desc"),
+        @NamedQuery(name="findRoomById",
+            query = "select r from Room r left join fetch r.users u where r.id = :room_id"),
 })
 public class Room {
 
@@ -34,6 +44,10 @@ public class Room {
     
     private String image = "C:\\Users\\jboxers\\IdeaProjects\\ChatRoom_Backend\\src\\main\\resources\\userImages\\user_image.jpg";
 
+    private TYPES type = TYPES.USER;
+
+    private LocalDateTime lastUpdated = LocalDateTime.now();
+
     @ManyToMany(cascade = CascadeType.ALL)
     @JoinTable(name = "USER_ROOM",
                 joinColumns = {
@@ -44,16 +58,15 @@ public class Room {
                 })
     private Set<User> users = new HashSet<>();
 
-    @NotNull
+    @CreationTimestamp
     private LocalDateTime timestamp;
 
     public Room(){
 
     }
 
-    public Room(String name, LocalDateTime timestamp) {
+    public Room(String name) {
         this.name = name;
-        this.timestamp = timestamp;
     }
 
     public Long getId() {
@@ -100,9 +113,25 @@ public class Room {
         this.users.add(user);
     }
 
-    public JsonObject toJson(){
+    public TYPES getType() {
+        return type;
+    }
+
+    public void setType(TYPES type) {
+        this.type = type;
+    }
+
+    public LocalDateTime getLastUpdated() {
+        return lastUpdated;
+    }
+
+    public void setLastUpdated(LocalDateTime lastUpdated) {
+        this.lastUpdated = lastUpdated;
+    }
+
+    public JsonObjectBuilder toJson(){
         JsonObjectBuilder builder = Json.createObjectBuilder();
-//        JsonArrayBuilder arrayBuilder = Json.createArrayBuilder();
+        JsonArrayBuilder arrayBuilder = Json.createArrayBuilder();
 
         if(id != null){
             builder.add("id", id);
@@ -110,13 +139,14 @@ public class Room {
 
         builder.add("name", name);
         builder.add("image", encodeImage(image));
+        builder.add("type", type.toString());
 
-//        for(User user : users){
-//            arrayBuilder.add(user.toJson());
-//        }
-//        builder.add("users", arrayBuilder);
+        for(User user : users){
+            arrayBuilder.add(user.toJson());
+        }
+        builder.add("users", arrayBuilder);
 
-        return builder.build();
+        return builder;
     }
 
     private String encodeImage(String imagePath) {
@@ -140,6 +170,7 @@ public class Room {
         return "Room{" +
                 "id='" + id + '\'' +
                 "name='" + name + '\'' +
+                "date='" + lastUpdated + '\'' +
                 '}';
     }
 }

@@ -1,11 +1,15 @@
 package models;
 
+import org.hibernate.annotations.CreationTimestamp;
+
 import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
+import javax.json.JsonReader;
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
+import java.io.StringReader;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Objects;
@@ -14,10 +18,14 @@ import java.util.Objects;
 @NamedQueries({
     @NamedQuery(name = "findMessageByUserAndRoom",
         query = "select m from Message m where m.user.id = :userid and m.room.id = :roomid"),
-    @NamedQuery(name = "findMessageByUser",
+    @NamedQuery(name = "findMessagesByUser",
         query = "select m from Message m where m.user.id = :userid"),
-    @NamedQuery(name="findMessageByRoom",
-        query = "select m from Message m where m.room.id = :roomid")
+    @NamedQuery(name="findMessagesByRoom",
+        query = "select m from Message m where m.room.id = :roomid"),
+    @NamedQuery(name="findLatestMessagesByRoom",
+        query = "select m from Message m where m.room.id = :roomid order by m.timestamp desc"),
+    @NamedQuery(name = "deleteMessageById",
+        query = "delete from Message m where m.id = :message_id")
 })
 public class Message {
 
@@ -39,18 +47,21 @@ public class Message {
     @NotNull
     private Room room;
 
-    @NotNull
+    @CreationTimestamp
     private LocalDateTime timestamp;
 
     public Message(){
 
     }
 
-    public Message(@Size(min = 1) String content, @NotNull User user, @NotNull Room room, @NotNull LocalDateTime timestamp) {
+    public Message(String content){
+
+    }
+
+    public Message(@Size(min = 1) String content, @NotNull User user, @NotNull Room room) {
         this.content = content;
         this.user = user;
         this.room = room;
-        this.timestamp = timestamp;
     }
 
     public Long getId() {
@@ -113,13 +124,12 @@ public class Message {
         builder.add("text", content);
         builder.add("author", user.getUsername());
         builder.add("timestamp", formatter.format(timestamp));
+        builder.add("roomid", room.getId());
 
         return builder.build();
     }
 
     public static Message fromJson(String jsonMessage){
-
-
 
         return null;
     }
@@ -148,10 +158,25 @@ public class Message {
         if (content.length() > 30) {
             displayContent = content.substring(0, 29);
         }
+
+        String author;
+        if(user == null){
+            author = "Unknown";
+        }else{
+            author = user.getUsername();
+        }
+
+        String roomName;
+        if(room == null){
+            roomName = "Unknown";
+        }else {
+            roomName = room.getName();
+        }
+
         return "Message{" +
                 "content='" + displayContent + '\'' +
-                ", author=" + user.getUsername() +
-                ", room=" + room.getName() +
+                ", author=" + author +
+                ", room=" + roomName +
                 ", timestamp=" + timestamp +
                 '}';
     }

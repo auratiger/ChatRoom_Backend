@@ -30,8 +30,8 @@ public class MessageServlet {
     private static final long serialVersionUID = -9064629862455451371L;
     private static final Logger logger = Logger.getLogger(MessageServlet.class);
 
-    private static final Set<Session>sessions =
-            Collections.synchronizedSet(new HashSet<>());
+    private static final Map<Long, Session> sessions =
+            Collections.synchronizedMap(new HashMap<>());
 
     private static final Map<Long, User> activeUsers =
             Collections.synchronizedMap(new HashMap<>());
@@ -48,7 +48,7 @@ public class MessageServlet {
     @OnOpen
     public void openConnection(@PathParam("userid") long id, Session session){
         logger.info("User has connected: " + session);
-        sessions.add(session);
+        sessions.put(id, session);
         userDAO.findUserById(id).ifPresent(user -> activeUsers.put(id, user));
 
         Optional<User> user = userDAO.findUserById(id);
@@ -74,24 +74,27 @@ public class MessageServlet {
 
         JsonReader reader = Json.createReader(new StringReader(jsonMessage));
         JsonObject json = reader.readObject();
+
         long roomid = json.getInt("roomid");
         String content = json.getString("message");
 
         User user = activeUsers.get(id);
         Room room = roomDAO.findRoomById(roomid).orElse(new Room());
-        Message message = new Message(content, user, room, LocalDateTime.now());
+        Message message = new Message(content, user, room);
+
         messageDAO.addMessage(message);
 
-        try {
-            for (Session ses : sessions) {
-                if(ses.isOpen() && !ses.equals(session)){
+        room.getUsers().forEach(u -> {
+            Session ses = sessions.get(u.getId());
+            if(ses.isOpen() && !ses.equals(session)){
+                try {
                     ses.getBasicRemote().sendText(message.toJson().toString());
+                } catch (IOException e) {
+                    logger.error("session crash");
+                    e.printStackTrace();
                 }
             }
-        }catch (IOException ex){
-            logger.error("session crash");
-            ex.printStackTrace();
-        }
+        });
     }
 
     @OnError
@@ -102,7 +105,7 @@ public class MessageServlet {
             root = root.getCause();
             count ++;
         }
-        if (root instanceof EOFException) {
+        if(root instanceof EOFException) {
             // Assume this is triggered by the user closing their browser and
             // ignore it.
         } else if( root instanceof NoSuchUserExistsException) {

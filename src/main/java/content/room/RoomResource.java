@@ -1,6 +1,8 @@
 package content.room;
 
+import content.message.MessageDAO;
 import content.message.MessageResource;
+import models.Message;
 import models.Room;
 import models.User;
 import user.login.UserDAO;
@@ -29,18 +31,29 @@ public class RoomResource {
     @Inject
     UserDAO userDAO;
 
+    @Inject
+    MessageDAO messageDAO;
+
     @GET
     @Path("/rooms/{userid}")
     public Response getRooms(@PathParam("userid") long userId){
 
-        List<Room> rooms = roomDAO.findRoomByUser(userId);
+        List<Room> rooms = roomDAO.findOrderedRoomsByUser(userId);
 
         JsonObjectBuilder objectBuilder = Json.createObjectBuilder();
         JsonArrayBuilder arrayBuilder = Json.createArrayBuilder();
 
         for (Room room : rooms) {
-            arrayBuilder.add(room.toJson());
-            System.out.println(room);
+
+            Optional<Message> m = messageDAO.findLatestMessageByRoom(room.getId());
+            String message;
+            if(m.isPresent()){
+                message = m.get().getContent();
+            }else{
+                message = "";
+            }
+
+            arrayBuilder.add(room.toJson().add("message", message));
         }
         objectBuilder.add("groups", arrayBuilder);
 
@@ -51,7 +64,7 @@ public class RoomResource {
     @Path("/rooms/{userid}/{groupName}")
     public Response createRoom(@PathParam("userid") long userId, @PathParam("groupName") String name){
 
-        Room newRoom = roomDAO.addRoom(new Room(name, LocalDateTime.now()));
+        Room newRoom = roomDAO.addRoom(new Room(name));
         Optional<User> user = userDAO.findUserById(userId);
         user.ifPresent(newRoom::addUser);
 
